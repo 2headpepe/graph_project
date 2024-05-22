@@ -2,7 +2,7 @@ import networkx as nx
 import random
 
 
-def create_directed_graph_with_source_and_sink(n, m):
+def create_directed_graph_with_source_and_sink(n, m, U):
     G = nx.gnm_random_graph(n - 2, m, directed=True)
 
     source = n - 2
@@ -25,7 +25,7 @@ def create_directed_graph_with_source_and_sink(n, m):
         num_sink_edges -= 1
 
     for (u, v) in G.edges():
-        G.edges[u, v]['capacity'] = random.randint(1, 100)
+        G.edges[u, v]['capacity'] = random.randint(1, U)
 
     return G
 
@@ -46,17 +46,17 @@ def can_reach_source_to_sink(graph, source, sink):
     return dfs(source)
 
 
-def create_random_nx_graph(n, m):
+def create_random_nx_graph(n, m, U):
     while True:
-        graph = create_directed_graph_with_source_and_sink(n, m)
+        graph = create_directed_graph_with_source_and_sink(n, m, U)
         source = n - 2
         sink = n - 1
         if can_reach_source_to_sink(graph, source, sink):
             return graph
 
 
-def create_random_graph(n, m):
-    graph = create_random_nx_graph(n, m)
+def create_random_graph(n, m, U):
+    graph = create_random_nx_graph(n, m, U)
     result = {}
     for start_vertex in graph.nodes():
         edges = []
@@ -65,3 +65,8 @@ def create_random_graph(n, m):
             edges.append((end_vertex, capacity))
         result[start_vertex] = edges
     return {'graph': result, 'source': n - 2, 'sink': n - 1}
+
+
+def change_graph_capacity(graph, U):
+    for (u, v) in graph.edges():
+        graph.edges[u, v]['capacity'] = random.randint(1, U)
