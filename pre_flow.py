@@ -44,6 +44,7 @@ class PushRelabel:
         self.excess = [0] * graph.size()
         self.height = [0] * graph.size()
         self.queue = deque()
+        self.in_queue = [False] * graph.size()
         self.initialize_preflow()
 
     def initialize_preflow(self):
@@ -55,6 +56,7 @@ class PushRelabel:
             self.excess[self.source] -= edge.flow
             if edge.to != self.sink:
                 self.queue.append(edge.to)
+                self.in_queue[edge.to] = True
 
     def push(self, u, edge):
         v = edge.to
@@ -63,8 +65,9 @@ class PushRelabel:
         edge.residual.flow -= flow
         self.excess[u] -= flow
         self.excess[v] += flow
-        if v != self.sink and v != self.source and v not in self.queue:
+        if not self.in_queue[v] and v != self.source and v != self.sink:
             self.queue.append(v)
+            self.in_queue[v] = True
 
     def relabel(self, u):
         min_height = float('inf')
@@ -74,18 +77,21 @@ class PushRelabel:
         self.height[u] = min_height + 1
 
     def discharge(self, u):
-        while self.excess[u] > 0:
-            for edge in self.graph.adj[u]:
-                if edge.capacity > edge.flow and self.height[u] == self.height[edge.to] + 1:
-                    self.push(u, edge)
-                    if self.excess[u] == 0:
-                        break
-            else:
-                self.relabel(u)
+        for edge in self.graph.adj[u]:
+            if self.excess[u] <= 0:
+                break
+            if edge.capacity > edge.flow and self.height[u] == self.height[edge.to] + 1:
+                self.push(u, edge)
+        if self.excess[u] > 0:
+            self.queue.append(u)
+            self.in_queue[u] = True
+            # in_queue[u] = True
 
     def run(self):
         while self.queue:
             u = self.queue.popleft()
+            self.in_queue[u] = False
+            self.relabel(u)
             self.discharge(u)
 
 
