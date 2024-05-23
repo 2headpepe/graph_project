@@ -45,6 +45,7 @@ class PushRelabel:
         self.height = [0] * graph.size()
         self.queue = deque()
         self.in_queue = [False] * graph.size()
+        self.counter = 0  # Counter for operations to trigger global relabel
         self.initialize_preflow()
 
     def initialize_preflow(self):
@@ -85,14 +86,32 @@ class PushRelabel:
         if self.excess[u] > 0:
             self.queue.append(u)
             self.in_queue[u] = True
-            # in_queue[u] = True
+
+    def global_relabel(self):
+        queue = deque([self.sink])
+        self.height = [float('inf')] * self.graph.size()
+        self.height[self.sink] = 0
+        while queue:
+            u = queue.popleft()
+            for edge in self.graph.adj[u]:
+                if edge.residual.capacity > edge.residual.flow and self.height[edge.to] > self.height[u] + 1:
+                    self.height[edge.to] = self.height[u] + 1
+                    queue.append(edge.to)
 
     def run(self):
         while self.queue:
             u = self.queue.popleft()
             self.in_queue[u] = False
+            old_height = self.height[u]
             self.relabel(u)
+            if self.height[u] > old_height:
+                self.global_relabel()
+                self.counter = 0
             self.discharge(u)
+            self.counter += 1
+            if self.counter >= 0.5 * len(self.graph.adj):
+                self.global_relabel()
+                self.counter = 0
 
 
 def create_graph_from_data(data):
@@ -113,6 +132,8 @@ def pre_flow(data):
     algorithm.run()
     return sum(edge.flow for edge in graph.adj[source])
 
+
+# Example usage:
 # Можно либо считать данные из файла
 # graph = create_graph_from_file('tests/test_1.txt')
 # или создать рандомный с 10 вершинами и 15 ребрами (чуть больше вообще-то между нами говоря)
