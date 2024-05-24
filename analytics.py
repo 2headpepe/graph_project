@@ -7,7 +7,7 @@ def read_excel_to_dataframe(file_path):
     return df
 
 
-file_path = 'DataGraphs.xlsx'
+file_path = 'graph_algorithms_results_10edges.xlsx'
 df = read_excel_to_dataframe(file_path)
 
 # Сравнение времени одного и того же алгоритма при разном Capacity.
@@ -57,8 +57,8 @@ for capacity in capacities:
 
     figures.append(fig)
 
-# for fig in figures:
-#     fig.show()
+#for fig in figures:
+#    fig.show()
 
 # Зависимость времени от количества ребер в графе при константном значении вершин и capacity
 df_filtered = df[df['Capacity'] == 1000]
@@ -94,17 +94,13 @@ for vertices in unique_vertices:
     fig.update_layout(
         title=f'Time Comparison for Vertices: {vertices} and Capacity: 1000',
         xaxis_title='Edges',
-        yaxis_title='Time',
-        autosize=False,
-        width=800,
-        height=600
+        yaxis_title='Time'
     )
 
     figures.append(fig)
-# for fig in figures:
-#     fig.show()
+#for fig in figures:
+#    fig.show()
 
-# Зависимость времени от capacity при const количестве вершин и ребер(полный граф)
 unique_vertices = df['Vertices'].unique()
 figures = []
 for vertices in unique_vertices:
@@ -112,44 +108,42 @@ for vertices in unique_vertices:
     df_vertex_edge = df[(df['Vertices'] == vertices) & (df['Edges'] == max_edges)]
 
     if not df_vertex_edge.empty:
-        fig_ek = go.Figure(data=[go.Scatter(
+        fig = go.Figure()
+
+        # Edmonds-Karp data
+        fig.add_trace(go.Scatter(
             x=df_vertex_edge['Capacity'],
             y=df_vertex_edge['Edmonds-Karp'],
             mode='markers+lines',
-            marker=dict(
-                size=8,
-                color='blue'
-            )
-        )])
-
-        fig_ek.update_layout(
-            title=f'Edmonds-Karp Times for Vertices: {vertices}, Edges: {max_edges}',
-            xaxis_title='Capacity',
-            yaxis_title='Time (Edmonds-Karp)',
-            autosize=False
-        )
-        figures.append(fig_ek)
-
-        fig_pf = go.Figure(data=[go.Scatter(
-            x=df_vertex_edge['Capacity'],
-            y=df_vertex_edge['Preflow'],
-            mode='markers+lines',
+            name='Edmonds-Karp',
             marker=dict(
                 size=8,
                 color='red'
             )
-        )])
+        ))
 
-        fig_pf.update_layout(
-            title=f'PreFlow Times for Vertices: {vertices}, Edges: {max_edges}',
+        # Preflow data
+        fig.add_trace(go.Scatter(
+            x=df_vertex_edge['Capacity'],
+            y=df_vertex_edge['Preflow'],
+            mode='markers+lines',
+            name='Preflow',
+            marker=dict(
+                size=8,
+                color='blue'
+            )
+        ))
+
+        fig.update_layout(
+            title=f'Time vs Capacity for Vertices: {vertices}, Edges: {max_edges}',
             xaxis_title='Capacity',
-            yaxis_title='Time (PreFlow)',
-            autosize=False
+            yaxis_title='Time',
+            legend_title='Algorithm'
         )
-        figures.append(fig_pf)
+        figures.append(fig)
 
-# for fig in figures:
-#     fig.show()
+#for fig in figures:
+#    fig.show()
 
 # Зависимость веремени от количества вершин и ребер при разных capacity
 fig_ek = go.Figure(data=[go.Scatter3d(
@@ -198,8 +192,8 @@ fig_pf.update_layout(
     )
 )
 
-# fig_ek.show()
-# fig_pf.show()
+fig_ek.show()
+fig_pf.show()
 
 # Зависимость веремени от количества вершин и capacity
 fig_ek = go.Figure(data=[go.Scatter3d(
@@ -248,8 +242,8 @@ fig_pf.update_layout(
     )
 )
 
-# fig_ek.show()
-# fig_pf.show()
+fig_ek.show()
+fig_pf.show()
 
 # Зависимость веремени от количества ребер и capacity
 fig_ek = go.Figure(data=[go.Scatter3d(
@@ -298,10 +292,40 @@ fig_pf.update_layout(
     )
 )
 
-# fig_ek.show()
-# fig_pf.show()
+fig_ek.show()
+fig_pf.show()
 
 
+# Сравнение работы на датасетах
+file_path = "test_results.xlsx"
+df = pd.read_excel(file_path, index_col=0)
 
+# Transform the DataFrame to have 'Algorithm' as a column for easier plotting
+df_reset = df.reset_index().melt(id_vars=['Algorithm'], var_name='Test', value_name='Time (seconds)')
+
+# Create a histogram to compare the two algorithms
+fig = go.Figure()
+
+algorithms = df_reset['Algorithm'].unique()
+for algorithm in algorithms:
+    df_alg = df_reset[df_reset['Algorithm'] == algorithm]
+    fig.add_trace(go.Bar(
+        x=df_alg['Test'],
+        y=df_alg['Time (seconds)'],
+        name=algorithm,
+        marker=dict(color='red' if algorithm == 'Edmonds-Karp' else 'blue')
+    ))
+
+# Update layout for better readability
+fig.update_layout(
+    title='Algorithm Performance Comparison Across Tests',
+    xaxis_title='Test',
+    yaxis_title='Time (seconds)',
+    barmode='group',
+    legend_title='Algorithm'
+)
+
+# Show the plot
+#fig.show()
 
 
